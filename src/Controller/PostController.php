@@ -3,11 +3,15 @@
 namespace App\Controller;
 
 use App\DTO\Post\StorePostDTO;
+use App\DTO\Post\UpdatePostDTO;
 use App\Entity\Post;
 use App\Request\Post\IndexPostRequest;
 use App\Request\Post\StorePostRequest;
+use App\Request\Post\UpdatePostRequest;
 use App\Resource\PostResource;
+use App\UseCase\Post\RemovePostHandler;
 use App\UseCase\Post\StorePostHandler;
+use App\UseCase\Post\UpdatePostHandler;
 use App\Utils\RequestValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -74,6 +78,43 @@ class PostController extends AbstractController
         return new JsonResponse(
             data: $this->postResource->item($post),
             json: true
+        );
+    }
+
+    #[Route('/{id:post}', methods: ['PATCH'])]
+    public function update(Request $request, Post $post, UpdatePostHandler $handler): JsonResponse
+    {
+        $values = $request->toArray();
+
+        $updateRequest = UpdatePostRequest::fromArray($values);
+
+        if ($validationError = $this->requestValidator->validate($updateRequest)) {
+            return $validationError;
+        }
+
+        $post = $handler->execute(
+            UpdatePostDTO::fromArray($values),
+            $post,
+        );
+
+        return new JsonResponse(
+            data: $this->postResource->item($post),
+            json: true
+        );
+    }
+
+    #[Route('/{id:post}', methods: ['DELETE'])]
+    public function remove(Post $post, RemovePostHandler $handler): JsonResponse
+    {
+        $post = $handler->execute(
+            $post,
+        );
+
+        return new JsonResponse(
+            data: [
+                'message' => 'Deleted'
+            ],
+            // json: true
         );
     }
 }

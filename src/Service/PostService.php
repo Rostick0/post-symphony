@@ -11,9 +11,16 @@ class PostService
         private readonly PostRepository $repository,
     ) {}
 
-    public function store(Post $post)
+    public function save(Post $post)
     {
         $this->repository->save($post);
+
+        $this->repository->flush();
+    }
+
+    public function remove(Post $post)
+    {
+        $this->repository->remove($post);
 
         $this->repository->flush();
     }

@@ -2,14 +2,14 @@
 
 namespace App\UseCase\Post;
 
-use App\DTO\Post\StorePostDTO;
+use App\DTO\Post\UpdatePostDTO;
 use App\Entity\Post;
 use App\Repository\CategoryRepository;
 use App\Repository\PostRepository;
 use App\Service\PostService;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
-class StorePostHandler
+class UpdatePostHandler
 {
     public function __construct(
         private readonly PostService $postService,
@@ -17,13 +17,19 @@ class StorePostHandler
         // private readonly   $validator,
     ) {}
 
-    public function execute(StorePostDTO $storePostDTO)
+    public function execute(UpdatePostDTO $updatePostDTO, Post $post)
     {
-        $post = new Post();
+        if ($updatePostDTO->title) {
+            $post->setTitle($updatePostDTO->title);
+        }
 
-        $post->setTitle($storePostDTO->title);
-        $post->setContent($storePostDTO->content);
-        $post->setCategory($this->categoryRepository->getReference($storePostDTO->category));
+        if ($updatePostDTO->content) {
+            $post->setContent($updatePostDTO->content);
+        }
+
+        if ($updatePostDTO->category) {
+            $post->setCategory($this->categoryRepository->getReference($updatePostDTO->category));
+        }
 
         $this->postService->save($post);
 
