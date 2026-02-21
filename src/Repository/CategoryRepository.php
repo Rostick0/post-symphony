@@ -40,4 +40,10 @@ class CategoryRepository extends ServiceEntityRepository
     //            ->getOneOrNullResult()
     //        ;
     //    }
+
+
+    public function getReference(int $categoryId): Category|null
+    {
+        return $this->getEntityManager()->getReference(Category::class, $categoryId);
+    }
 }

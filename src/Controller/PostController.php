@@ -2,8 +2,12 @@
 
 namespace App\Controller;
 
+use App\DTO\Post\StorePostDTO;
 use App\Entity\Post;
 use App\Request\Post\IndexPostRequest;
+use App\Request\Post\StorePostRequest;
+use App\Resource\PostResource;
+use App\UseCase\Post\StorePostHandler;
 use App\Utils\RequestValidator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,7 +19,8 @@ use Symfony\Component\Routing\Attribute\Route;
 class PostController extends AbstractController
 {
     public function __construct(
-        private RequestValidator $requestValidator
+        private RequestValidator $requestValidator,
+        private PostResource $postResource,
     ) {}
 
     #[Route('', methods: ['GET', 'HEAD'])]
@@ -25,6 +30,7 @@ class PostController extends AbstractController
         // dd($indexRequest);
 
         $validationError = $this->requestValidator->validate($indexRequest);
+
         if ($validationError) {
             return $validationError;
         }
@@ -57,20 +63,32 @@ class PostController extends AbstractController
     }
 
     #[Route('/{id:post}', methods: ['GET', 'HEAD'])]
-    public function show(?Post $post, EntityManagerInterface $entityManager): JsonResponse
+    public function show(?Post $post): JsonResponse
     {
-        $data = [
-            'id' => $post->getId(),
-            'title' => $post->getTitle(),
-            'content' => $post->getContent(),
-            'category' => [
-                'id' => $post->getCategory()->getId(),
-                'name' => $post->getCategory()->getName(),
-            ],
-        ];
+        return new JsonResponse(
+            data: $this->postResource->item($post),
+            json: true
+        );
+    }
 
-        return $this->json(
-            $data
+    #[Route('', methods: ['POST'])]
+    public function store(Request $request, StorePostHandler $handler): JsonResponse
+    {
+        $values = $request->toArray();
+
+        $storeRequest = StorePostRequest::fromArray($values);
+
+        if ($validationError = $this->requestValidator->validate($storeRequest)) {
+            return $validationError;
+        }
+
+        $post = $handler->execute(
+            StorePostDTO::fromArray($values)
+        );
+
+        return new JsonResponse(
+            data: $this->postResource->item($post),
+            json: true
         );
     }
 }
