@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\DTO\Post\StorePostDTO;
 use App\DTO\Post\UpdatePostDTO;
 use App\Entity\Post;
+use App\Query\Post\IndexPostHandler;
 use App\Request\Post\IndexPostRequest;
 use App\Request\Post\StorePostRequest;
 use App\Request\Post\UpdatePostRequest;
@@ -28,7 +29,7 @@ class PostController extends AbstractController
     ) {}
 
     #[Route('', methods: ['GET', 'HEAD'])]
-    public function index(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function index(Request $request, IndexPostHandler $handler): JsonResponse
     {
         $queries = $request->query->all();
         $indexRequest = IndexPostRequest::fromArray($queries);
@@ -37,15 +38,12 @@ class PostController extends AbstractController
             return $validationError;
         }
 
-        $postRepository = $entityManager->getRepository(Post::class);
-
-        $posts = $postRepository->findByFilters($queries);
-        $total = $postRepository->countByFilters($queries);
+        $postsResource = $handler->execute($queries);
 
         return new JsonResponse(
             data: $this->postResource->list([
-                'data' => $posts,
-                'total' => $total
+                'data' => $postsResource->data,
+                'total' => $postsResource->totals,
             ]),
             json: true
         );
