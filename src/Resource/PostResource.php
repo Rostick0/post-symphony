@@ -12,9 +12,9 @@ class PostResource
     ) {}
 
 
-    public function list(array $posts)
+    public function list(array $data)
     {
-        return $this->serializer->serialize($posts, 'json', ['groups' => 'post:list']);
+        return $this->serializer->serialize($data, 'json', ['groups' => 'post:list']);
     }
 
     public function item(Post $post)

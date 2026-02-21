@@ -54,37 +54,18 @@ class IndexPostRequest
     #[Assert\PositiveOrZero(message: 'Offset must be zero or positive')]
     public int $offset = 0;
 
-    /**
-     * Создает DTO из query параметров Request
-     */
-    public static function fromQuery(array $query): self
+    public static function fromArray(array $array): self
     {
         $dto = new self();
 
-        $dto->search = $query['search'] ?? null;
-        $dto->title = $query['title'] ?? null;
-        $dto->category_id = isset($query['category_id']) ? (int)$query['category_id'] : null;
-        $dto->sort_by = $query['sort_by'] ?? 'id';
-        $dto->sort_order = strtoupper($query['sort_order'] ?? 'DESC');
-        $dto->limit = isset($query['limit']) ? (int)$query['limit'] : 10;
-        $dto->offset = isset($query['offset']) ? (int)$query['offset'] : 0;
+        $dto->search = $array['search'] ?? null;
+        $dto->title = $array['title'] ?? null;
+        $dto->category_id = isset($array['category_id']) ? (int)$array['category_id'] : null;
+        $dto->sort_by = $array['sort_by'] ?? 'id';
+        $dto->sort_order = strtoupper($array['sort_order'] ?? 'DESC');
+        $dto->limit = isset($array['limit']) ? (int)$array['limit'] : 10;
+        $dto->offset = isset($array['offset']) ? (int)$array['offset'] : 0;
 
         return $dto;
-    }
-
-    /**
-     * Конвертирует DTO в массив фильтров для репозитория
-     */
-    public function toFilters(): array
-    {
-        return [
-            'search' => $this->search,
-            'title' => $this->title,
-            'category_id' => $this->category_id,
-            'sort_by' => $this->sort_by,
-            'sort_order' => $this->sort_order,
-            'limit' => $this->limit,
-            'offset' => $this->offset,
-        ];
     }
 }

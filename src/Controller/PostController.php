@@ -26,39 +26,24 @@ class PostController extends AbstractController
     #[Route('', methods: ['GET', 'HEAD'])]
     public function index(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
-        $indexRequest = IndexPostRequest::fromQuery($request->query->all());
-        // dd($indexRequest);
+        $queries = $request->query->all();
+        $indexRequest = IndexPostRequest::fromArray($queries);
 
-        $validationError = $this->requestValidator->validate($indexRequest);
-
-        if ($validationError) {
+        if ($validationError = $this->requestValidator->validate($indexRequest)) {
             return $validationError;
         }
 
         $postRepository = $entityManager->getRepository(Post::class);
 
-        $filters = $indexRequest->toFilters();
-        $posts = $postRepository->findByFilters($filters);
-        $total = $postRepository->countByFilters($filters);
+        $posts = $postRepository->findByFilters($queries);
+        $total = $postRepository->countByFilters($queries);
 
-        $data = [];
-        foreach ($posts as $post) {
-            $data[] = [
-                'id' => $post->getId(),
-                'title' => $post->getTitle(),
-                'content' => $post->getContent(),
-                'category' => [
-                    'id' => $post->getCategory()->getId(),
-                    'name' => $post->getCategory()->getName(),
-                ],
-            ];
-        }
-
-        return $this->json(
-            [
-                'data' => $data,
-                'total' => $total,
-            ]
+        return new JsonResponse(
+            data: $this->postResource->list([
+                'data' => $posts,
+                'total' => $total
+            ]),
+            json: true
         );
     }
 
